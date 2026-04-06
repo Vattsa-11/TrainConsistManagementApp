@@ -1,87 +1,114 @@
-/**
- * ========================================================
- * TEST CLASS - TrainConsistManagementAppTest
- * ========================================================
- *
- * Use Case 12: Safety Compliance Check for Goods Bogies
- *
- * Description:
- * Tests stream-based safety compliance validation of goods
- * bogies using allMatch(). Verifies cylindrical bogie rule,
- * valid/invalid formations, non-cylindrical flexibility,
- * mixed violations, and empty list handling.
- *
- * @author Developer
- * @version 12.0
- */
-
 import org.junit.Test;
-import static org.junit.Assert.*;
 
-import java.util.ArrayList;
-import java.util.List;
+import static org.junit.Assert.*;
 
 public class TrainConsistManagementAppTest {
 
-    // --------------------------------------------------------
-    // TC1: All cylindrical bogies carry Petroleum → safe
-    // --------------------------------------------------------
+    // ══════════════════════════════════════════
+    // TEST 1
+    // Safe cargo assignment must succeed
+    // without any exception
+    // ══════════════════════════════════════════
     @Test
-    public void testSafety_AllBogiesValid() {
-        List<TrainConsistManagementApp.GoodsBogie> goodsBogies = new ArrayList<>();
-        goodsBogies.add(new TrainConsistManagementApp.GoodsBogie("Cylindrical", "Petroleum"));
-        goodsBogies.add(new TrainConsistManagementApp.GoodsBogie("Open",        "Coal"));
-        goodsBogies.add(new TrainConsistManagementApp.GoodsBogie("Box",         "Grain"));
+    public void testCargo_SafeAssignment() {
 
-        assertTrue(TrainConsistManagementApp.isSafetyCompliant(goodsBogies));
+        TrainConsistManagementApp.GoodsBogie bogie =
+                new TrainConsistManagementApp.GoodsBogie("Cylindrical");
+
+        bogie.assignCargo("Petroleum");
+
+        assertEquals("Cargo must be Petroleum",
+                "Petroleum", bogie.cargo);
     }
 
-    // --------------------------------------------------------
-    // TC2: Cylindrical bogie carrying Coal → unsafe
-    // --------------------------------------------------------
+    // ══════════════════════════════════════════
+    // TEST 2
+    // Petroleum on Rectangular must throw
+    // CargoSafetyException
+    // ══════════════════════════════════════════
     @Test
-    public void testSafety_CylindricalWithInvalidCargo() {
-        List<TrainConsistManagementApp.GoodsBogie> goodsBogies = new ArrayList<>();
-        goodsBogies.add(new TrainConsistManagementApp.GoodsBogie("Cylindrical", "Coal"));
-        goodsBogies.add(new TrainConsistManagementApp.GoodsBogie("Open",        "Grain"));
+    public void testCargo_UnsafeAssignmentHandled() {
 
-        assertFalse(TrainConsistManagementApp.isSafetyCompliant(goodsBogies));
+        TrainConsistManagementApp.GoodsBogie bogie =
+                new TrainConsistManagementApp.GoodsBogie("Rectangular");
+
+        try {
+            bogie.assignCargo("Petroleum");
+            fail("CargoSafetyException expected");
+
+        } catch (TrainConsistManagementApp.CargoSafetyException e) {
+            assertNotNull("Exception must be thrown", e);
+        }
     }
 
-    // --------------------------------------------------------
-    // TC3: Non-cylindrical bogies can carry any cargo → safe
-    // Open and Box bogies with Coal or Grain must pass
-    // --------------------------------------------------------
+    // ══════════════════════════════════════════
+    // TEST 3
+    // Cargo must NOT be assigned after
+    // a failed unsafe assignment
+    // ══════════════════════════════════════════
     @Test
-    public void testSafety_NonCylindricalBogiesAllowed() {
-        List<TrainConsistManagementApp.GoodsBogie> goodsBogies = new ArrayList<>();
-        goodsBogies.add(new TrainConsistManagementApp.GoodsBogie("Open", "Coal"));
-        goodsBogies.add(new TrainConsistManagementApp.GoodsBogie("Box",  "Grain"));
-        goodsBogies.add(new TrainConsistManagementApp.GoodsBogie("Open", "Petroleum"));
+    public void testCargo_CargoNotAssignedAfterFailure() {
 
-        assertTrue(TrainConsistManagementApp.isSafetyCompliant(goodsBogies));
+        TrainConsistManagementApp.GoodsBogie bogie =
+                new TrainConsistManagementApp.GoodsBogie("Rectangular");
+
+        try {
+            bogie.assignCargo("Petroleum");
+        } catch (TrainConsistManagementApp.CargoSafetyException e) {
+            // expected
+        }
+
+        assertNull("Cargo must remain null after failed assignment",
+                bogie.cargo);
     }
 
-    // --------------------------------------------------------
-    // TC4: One cylindrical bogie violates rule → entire train unsafe
-    // --------------------------------------------------------
+    // ══════════════════════════════════════════
+    // TEST 4
+    // Program must continue running after
+    // exception is handled
+    // ══════════════════════════════════════════
     @Test
-    public void testSafety_MixedBogiesWithViolation() {
-        List<TrainConsistManagementApp.GoodsBogie> goodsBogies = new ArrayList<>();
-        goodsBogies.add(new TrainConsistManagementApp.GoodsBogie("Cylindrical", "Petroleum")); // valid
-        goodsBogies.add(new TrainConsistManagementApp.GoodsBogie("Cylindrical", "Coal"));      // violation
-        goodsBogies.add(new TrainConsistManagementApp.GoodsBogie("Open",        "Grain"));
+    public void testCargo_ProgramContinuesAfterException() {
 
-        assertFalse(TrainConsistManagementApp.isSafetyCompliant(goodsBogies));
+        TrainConsistManagementApp.GoodsBogie b1 =
+                new TrainConsistManagementApp.GoodsBogie("Rectangular");
+        TrainConsistManagementApp.GoodsBogie b2 =
+                new TrainConsistManagementApp.GoodsBogie("Cylindrical");
+
+        try {
+            b1.assignCargo("Petroleum"); // will throw
+        } catch (TrainConsistManagementApp.CargoSafetyException e) {
+            // handled
+        }
+
+        // b2 must still work after b1 exception
+        b2.assignCargo("Petroleum");
+        assertEquals("b2 must have Petroleum assigned",
+                "Petroleum", b2.cargo);
     }
 
-    // --------------------------------------------------------
-    // TC5: Empty bogie list → allMatch returns true (no violations)
-    // --------------------------------------------------------
+    // ══════════════════════════════════════════
+    // TEST 5
+    // finally block must always execute
+    // regardless of success or failure
+    // ══════════════════════════════════════════
     @Test
-    public void testSafety_EmptyBogieList() {
-        List<TrainConsistManagementApp.GoodsBogie> goodsBogies = new ArrayList<>();
+    public void testCargo_FinallyBlockExecution() {
 
-        assertTrue(TrainConsistManagementApp.isSafetyCompliant(goodsBogies));
+        boolean[] finallyRan = {false};
+
+        TrainConsistManagementApp.GoodsBogie bogie =
+                new TrainConsistManagementApp.GoodsBogie("Rectangular");
+
+        try {
+            bogie.assignCargo("Petroleum");
+        } catch (TrainConsistManagementApp.CargoSafetyException e) {
+            // caught
+        } finally {
+            finallyRan[0] = true;
+        }
+
+        assertTrue("finally block must always execute",
+                finallyRan[0]);
     }
 }
