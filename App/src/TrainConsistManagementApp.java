@@ -36,8 +36,8 @@ public class TrainConsistManagementApp {
         int capacity;
 
         Bogie(String name, String type, int capacity) {
-            this.name = name;
-            this.type = type;
+            this.name     = name;
+            this.type     = type;
             this.capacity = capacity;
         }
     }
@@ -58,17 +58,16 @@ public class TrainConsistManagementApp {
         List<Bogie> bogies = new ArrayList<>();
 
         // ---- Passenger bogies ----
-        bogies.add(new Bogie("Sleeper-1",    "Passenger", 72));
-        bogies.add(new Bogie("Sleeper-2",    "Passenger", 72));
-        bogies.add(new Bogie("AC Chair-1",   "Passenger", 56));
-        bogies.add(new Bogie("First Class-1","Passenger", 24));
+        bogies.add(new Bogie("Sleeper-1",     "Passenger", 72));
+        bogies.add(new Bogie("Sleeper-2",     "Passenger", 72));
+        bogies.add(new Bogie("AC Chair-1",    "Passenger", 56));
+        bogies.add(new Bogie("First Class-1", "Passenger", 24));
 
         // ---- Goods bogies ----
-        bogies.add(new Bogie("Rectangular-1","Goods", 120));
-        bogies.add(new Bogie("Cylindrical-1","Goods", 100));
+        bogies.add(new Bogie("Rectangular-1", "Goods", 120));
+        bogies.add(new Bogie("Cylindrical-1", "Goods", 100));
 
         // ---- Apply groupingBy on bogie type ----
-        // stream() -> groupingBy() -> Map<type, List<Bogie>>
         Map<String, List<Bogie>> grouped = groupByType(bogies);
 
         // ---- Display grouped result ----
